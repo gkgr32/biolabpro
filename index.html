@@ -104,10 +104,11 @@
 
             return (
                 <div className="min-h-screen bg-gray-50 text-gray-800 font-inter">
+                    {/* The Header now uses flex-col for small screens and flex-row for medium/large screens */}
                     <header className="flex flex-col md:flex-row items-center justify-between p-6 bg-white shadow-md">
                         
-                        {/* Container Λογότυπων (ΚΕΝΤΡΙΚΗ ΑΛΑΪΝΙΣΗ & ΜΕΓΑΛΥΤΕΡΟ ΜΕΓΕΘΟΣ) */}
-                        <div className="flex items-center w-full md:w-2/3 **justify-center gap-12**">
+                        {/* Container Λογότυπων: Ensures Central Alignment on all screens */}
+                        <div className="flex items-center **w-full** md:w-2/3 **justify-center gap-12**">
                             
                             {/* Logo 1: UNOVATE */}
                             <img src={unovateLogo} alt="UNOVATE" className="h-12" />
@@ -119,7 +120,7 @@
                             <img src={petieLogo} alt="PETIE" className="h-12" />
                         </div>
 
-                        {/* Γραμμή Πλοήγησης */}
+                        {/* Γραμμή Πλοήγησης: Shifts below logos on small screen, right-aligned on large screens */}
                         <nav className="mt-4 md:mt-0 space-x-4 text-sm font-medium">
                             <CustomButton onClick={() => setPage('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
                             <CustomButton onClick={() => setPage('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
@@ -341,5 +342,3 @@
     </script>
 </body>
 </html>
-
-
