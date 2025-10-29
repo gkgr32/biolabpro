@@ -59,6 +59,7 @@
         // ----------------------------------------------------------------------
 
         function App() {
+            // Added 'contact' to the initial state logic
             const [page, setPage] = useState('home');
 
             // NEW FUNCTION: Sets page and scrolls to top for a better page transition experience
@@ -89,8 +90,16 @@
             const handleSubmit = (e) => {
                 e.preventDefault();
                 console.log('Form Data Submitted:', formData);
-                // Εδώ θα έπρεπε να στείλετε τα δεδομένα στον server
-                setAndScrollToTop('thankyou');
+                
+                // --- CONDITIONAL LOGIC: Check last combo box value (biofluidCollection) ---
+                if (formData.biofluidCollection === 'Αιμοληψία - Οδηγίες') {
+                    // Go to 4th Page (Contact)
+                    setAndScrollToTop('contact');
+                } else {
+                    // Go to Thank You Page (Normal Submission Flow / 3rd page equivalent in this flow)
+                    setAndScrollToTop('thankyou');
+                }
+                // ---------------------------------------------------------------------------
             };
 
             const scrollToVideo = () => {
@@ -125,7 +134,7 @@
                             {/* 1. LEFT ALIGNMENT: UNOVATE (Pinned to the far left) - NOW CLICKABLE TO HOME */}
                             <div 
                                 className="absolute left-0 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                                onClick={() => setAndScrollToTop('home')} // Use setAndScrollToTop for consistency
+                                onClick={() => setAndScrollToTop('home')} 
                             >
                                 <img src={unovateLogo} alt="UNOVATE" className="h-12" />
                             </div>
@@ -138,11 +147,12 @@
                             {/* 3. RIGHT ALIGNMENT GROUP: Navigation and PETIE (Pinned to the far right) */}
                             <div className="hidden md:flex absolute right-0 top-1/2 transform -translate-y-1/2 items-center space-x-6">
                                 
-                                {/* Navigation Links */}
+                                {/* Navigation Links - ADDED 'Επικοινωνία' */}
                                 <nav className="space-x-4 text-sm font-medium">
                                     <CustomButton onClick={() => setAndScrollToTop('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
                                     <CustomButton onClick={() => setAndScrollToTop('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
                                     <CustomButton onClick={() => setAndScrollToTop('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
+                                    <CustomButton onClick={() => setAndScrollToTop('contact')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Επικοινωνία</CustomButton>
                                 </nav>
 
                                  {/* PETIE Logo (Pinned to the right edge) */}
@@ -162,6 +172,7 @@
                                 <CustomButton onClick={() => setAndScrollToTop('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
                                 <CustomButton onClick={() => setAndScrollToTop('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
                                 <CustomButton onClick={() => setAndScrollToTop('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
+                                <CustomButton onClick={() => setAndScrollToTop('contact')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Επικοινωνία</CustomButton>
                             </nav>
                         </div>
                     </header>
@@ -193,17 +204,18 @@
                                 <CustomButton onClick={() => setAndScrollToTop('form')}>Εκδήλωση Ενδιαφέροντος</CustomButton>
                             </div>
 
-                            {/* 2. SECTION: Video Player */}
+                            {/* 2. SECTION: Video Player - USES <video> TAG to prevent autoplay */}
                             <div id="video-section" className="flex flex-col items-center p-8 pt-16 space-y-6 w-full max-w-4xl">
                                 <h2 className="text-3xl font-bold text-blue-800 mb-4">Παρουσίαση Βίντεο</h2>
                                 <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-lg">
-                                    <iframe
+                                    <video
                                         className="w-full h-full"
-                                        src={videoUrl + "?autoplay=0"}  // Added ?autoplay=0 to prevent auto-start
-                                        title="Demo Video"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    ></iframe>
+                                        src={videoUrl}
+                                        controls
+                                        poster={backgroundImage} 
+                                    >
+                                        Your browser does not support the video tag.
+                                    </video>
                                 </div>
                             </div>
                         </MotionMain>
@@ -228,11 +240,57 @@
                             
                             {/* Button for returning to home */}
                             <div className="mt-8 text-center">
+                                {/* This is the button on the 'about' page - it still goes to 'home' */}
                                 <CustomButton onClick={() => setAndScrollToTop('home')} className="bg-blue-600 hover:bg-blue-700">Επιστροφή στην Αρχική</CustomButton>
                             </div>
                         </MotionMain>
                     )}
 
+                    {/* Page 4: Contact Information (Form Layout + Video) */}
+                    {page === 'contact' && (
+                        <MotionMain
+                            className="p-8 max-w-2xl mx-auto" // Use max-w-2xl like the form page
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <CustomCard className="mb-8">
+                                <h2 className="text-3xl font-bold text-blue-800 mb-6 text-center">Στοιχεία Επικοινωνίας</h2>
+                                <div className="space-y-4 text-left text-lg">
+                                    <p>Για οποιαδήποτε πληροφορία ή απορία σχετικά με το πρόγραμμα BIOLABPRO, μπορείτε να επικοινωνήσετε με την ομάδα μας:</p>
+                                    
+                                    <div className="border-t pt-4 space-y-2">
+                                        <p><strong>Υπεύθυνος Έργου:</strong> Δρ. [Όνομα Υπευθύνου]</p>
+                                        <p><strong>Email:</strong> <a href="mailto:info@biolabpro.gr" className="text-blue-600 hover:underline">info@biolabpro.gr</a></p>
+                                        <p><strong>Τηλέφωνο:</strong> +30 210 XXXX XXX</p>
+                                        <p><strong>Διεύθυνση:</strong> Πανεπιστήμιο Δυτικής Αττικής (ΠΑΔΑ), [Σχολή/Τμήμα]</p>
+                                    </div>
+                                </div>
+                            </CustomCard>
+
+                            {/* Video Section - Copied from Home Page */}
+                             <div className="flex flex-col items-center p-8 pt-4 space-y-6 w-full">
+                                <h2 className="text-2xl font-bold text-blue-800 border-t pt-4 mb-2">Παρουσίαση Βίντεο</h2>
+                                <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-lg">
+                                    <video
+                                        className="w-full h-full"
+                                        src={videoUrl}
+                                        controls
+                                        poster={backgroundImage} 
+                                    >
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            </div>
+                            {/* End Video Section */}
+
+                            <div className="mt-8 text-center">
+                                <CustomButton onClick={() => setAndScrollToTop('home')} className="bg-blue-600 hover:bg-blue-700">Επιστροφή στην Αρχική</CustomButton>
+                            </div>
+                        </MotionMain>
+                    )}
+
+                    {/* Page 3: Form */}
                     {page === 'form' && (
                         <MotionMain
                             className="p-8 max-w-2xl mx-auto"
@@ -327,7 +385,7 @@
                                     <label htmlFor="biofluidCollection" className="block font-medium mb-1">Λήψη Βιολογικών Υγρών</label>
                                     <select
                                         id="biofluidCollection"
-                                        name="biofluidCollection" // camelCase
+                                        name="biofluidCollection" // **LAST COMBO BOX**
                                         onChange={handleChange}
                                         value={formData.biofluidCollection} // value set
                                         className="w-full border p-2 rounded-md"
