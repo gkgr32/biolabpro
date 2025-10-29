@@ -125,7 +125,6 @@
                             </div>
 
                             {/* 3. RIGHT ALIGNMENT GROUP: Navigation and PETIE (Pinned to the far right) */}
-                            {/* This uses flex inside the absolute container to align Nav and PETIE */}
                             <div className="hidden md:flex absolute right-0 top-1/2 transform -translate-y-1/2 items-center space-x-6">
                                 
                                 {/* Navigation Links */}
@@ -214,6 +213,10 @@
                                     <li><strong>Κοινωνικό/Εκπαιδευτικό Αποτύπωμα:</strong> Ενίσχυση δεξιοτήτων και κοινωνικής ευαισθησίας των φοιτητών.</li>
                                     <li><strong>Συνεργασίες:</strong> Δυνατότητες σύμπραξης με ερευνητικά κέντρα και βιοτεχνολογικές εταιρείες.</li>
                                 </ul>
+                                {/* Επιστροφή στην Αρχική Button */}
+                                <div className="mt-8 text-center">
+                                    <CustomButton onClick={() => setPage('home')} className="bg-blue-600 hover:bg-blue-700">Επιστροφή στην Αρχική</CustomButton>
+                                </div>
                             </CustomCard>
                         </MotionMain>
                     )}
