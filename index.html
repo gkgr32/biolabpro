@@ -109,31 +109,35 @@
             return (
                 <div className="min-h-screen bg-gray-50 text-gray-800 font-inter">
                     
-                    {/* Header: UNOVATE Left, PETIE Right, ΠΑΔΑ Center, Nav Far Right */}
+                    {/* Header: UNOVATE Left, ΠΑΔΑ Center, PETIE Right */}
                     <header className="p-6 bg-white shadow-md relative-header">
                         <div className="flex items-center w-full max-w-7xl mx-auto **justify-between** relative">
                             
-                            {/* LEFT ALIGNMENT: UNOVATE */}
+                            {/* 1. LEFT ALIGNMENT: UNOVATE */}
                             <div className="flex items-center">
                                 <img src={unovateLogo} alt="UNOVATE" className="h-12" />
                             </div>
 
-                            {/* CENTER ALIGNMENT: ΠΑΔΑ Logo (Absolute Centering) */}
+                            {/* 2. CENTER ALIGNMENT: ΠΑΔΑ Logo (Absolute Centering) */}
+                            {/* Ensures it is mathematically centered, ignoring content on the sides. */}
                             <div className="hidden md:flex absolute inset-x-0 justify-center items-center">
                                 <img src={padaLogo} alt="ΠΑΔΑ" className="h-12" />
                             </div>
                             
-                            {/* RIGHT ALIGNMENT: PETIE */}
-                            <div className="flex items-center">
+                            {/* 3. RIGHT ALIGNMENT: PETIE AND NAVIGATION CONTAINER */}
+                            {/* This container sits on the far right due to justify-between */}
+                            <div className="flex items-center space-x-6">
+                                
+                                {/* Navigation Links (Placed *before* PETIE to be to the left of it) */}
+                                <nav className="hidden md:flex space-x-4 text-sm font-medium">
+                                    <CustomButton onClick={() => setPage('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
+                                    <CustomButton onClick={() => setPage('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
+                                    <CustomButton onClick={() => setPage('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
+                                </nav>
+
+                                 {/* PETIE Logo (This is the final element, pinned to the far right) */}
                                 <img src={petieLogo} alt="PETIE" className="h-12" />
                             </div>
-
-                            {/* Navigation Links (Positioned absolutely on the far right) */}
-                            <nav className="hidden md:flex absolute right-0 top-1/2 transform -translate-y-1/2 space-x-4 text-sm font-medium">
-                                <CustomButton onClick={() => setPage('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
-                                <CustomButton onClick={() => setPage('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
-                                <CustomButton onClick={() => setPage('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
-                            </nav>
                             
                         </div>
                         
