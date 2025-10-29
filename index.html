@@ -61,6 +61,14 @@
         function App() {
             const [page, setPage] = useState('home');
 
+            // NEW FUNCTION: Sets page and scrolls to top for a better page transition experience
+            const setAndScrollToTop = (newPage) => {
+                setPage(newPage);
+                // Scroll to top with smooth animation
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+
             // Αρχικοποίηση όλων των πεδίων της φόρμας με τα σωστά camelCase names
             const [formData, setFormData] = useState({
                 fullName: '',
@@ -82,7 +90,7 @@
                 e.preventDefault();
                 console.log('Form Data Submitted:', formData);
                 // Εδώ θα έπρεπε να στείλετε τα δεδομένα στον server
-                setPage('thankyou');
+                setAndScrollToTop('thankyou');
             };
 
             const scrollToVideo = () => {
@@ -114,10 +122,10 @@
                         <div className="w-full max-w-7xl mx-auto relative h-12"> 
                             {/* h-12 ensures the header has enough height for absolutely positioned elements */}
                             
-                            {/* 1. LEFT ALIGNMENT: UNOVATE (Pinned to the far left) */}
+                            {/* 1. LEFT ALIGNMENT: UNOVATE (Pinned to the far left) - NOW CLICKABLE TO HOME */}
                             <div 
                                 className="absolute left-0 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                                onClick={() => setPage('home')}
+                                onClick={() => setAndScrollToTop('home')} // Use setAndScrollToTop for consistency
                             >
                                 <img src={unovateLogo} alt="UNOVATE" className="h-12" />
                             </div>
@@ -132,9 +140,9 @@
                                 
                                 {/* Navigation Links */}
                                 <nav className="space-x-4 text-sm font-medium">
-                                    <CustomButton onClick={() => setPage('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
-                                    <CustomButton onClick={() => setPage('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
-                                    <CustomButton onClick={() => setPage('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
+                                    <CustomButton onClick={() => setAndScrollToTop('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
+                                    <CustomButton onClick={() => setAndScrollToTop('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
+                                    <CustomButton onClick={() => setAndScrollToTop('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
                                 </nav>
 
                                  {/* PETIE Logo (Pinned to the right edge) */}
@@ -151,9 +159,9 @@
                                 <img src={petieLogo} alt="PETIE" className="h-12" />
                             </div>
                             <nav className="flex justify-center space-x-4 text-sm font-medium w-full">
-                                <CustomButton onClick={() => setPage('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
-                                <CustomButton onClick={() => setPage('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
-                                <CustomButton onClick={() => setPage('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
+                                <CustomButton onClick={() => setAndScrollToTop('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
+                                <CustomButton onClick={() => setAndScrollToTop('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
+                                <CustomButton onClick={() => setAndScrollToTop('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
                             </nav>
                         </div>
                     </header>
@@ -182,7 +190,7 @@
                             <div className="flex flex-col md:flex-row gap-4 mt-8">
                                 <CustomButton onClick={() => window.open(pdfUrl, '_blank')}>Δες την πρόταση (PDF)</CustomButton>
                                 <CustomButton onClick={scrollToVideo}>Δες το βίντεο</CustomButton>
-                                <CustomButton onClick={() => setPage('form')}>Εκδήλωση Ενδιαφέροντος</CustomButton>
+                                <CustomButton onClick={() => setAndScrollToTop('form')}>Εκδήλωση Ενδιαφέροντος</CustomButton>
                             </div>
 
                             {/* 2. SECTION: Video Player */}
@@ -191,7 +199,7 @@
                                 <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-lg">
                                     <iframe
                                         className="w-full h-full"
-                                        src={videoUrl} 
+                                        src={videoUrl + "?autoplay=0"}  // Added ?autoplay=0 to prevent auto-start
                                         title="Demo Video"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen
@@ -218,9 +226,9 @@
                                 </ul>
                             </CustomCard>
                             
-                            {/* Button Correction: Placed outside CustomCard for reliable rendering */}
+                            {/* Button for returning to home */}
                             <div className="mt-8 text-center">
-                                <CustomButton onClick={() => setPage('home')} className="bg-blue-600 hover:bg-blue-700">Επιστροφή στην Αρχική</CustomButton>
+                                <CustomButton onClick={() => setAndScrollToTop('home')} className="bg-blue-600 hover:bg-blue-700">Επιστροφή στην Αρχική</CustomButton>
                             </div>
                         </MotionMain>
                     )}
@@ -360,7 +368,7 @@
                                 <h2 className="text-3xl font-bold text-green-600 mb-4">Ευχαριστούμε!</h2>
                                 <p className="text-xl text-gray-700 mb-6">Η εκδήλωση ενδιαφέροντος υποβλήθηκε επιτυχώς.</p>
                                 <p className="text-md text-gray-500 mb-8">Θα επικοινωνήσουμε μαζί σας σύντομα.</p>
-                                <CustomButton onClick={() => setPage('home')} className="bg-blue-600 hover:bg-blue-700">Επιστροφή στην Αρχική</CustomButton>
+                                <CustomButton onClick={() => setAndScrollToTop('home')} className="bg-blue-600 hover:bg-blue-700">Επιστροφή στην Αρχική</CustomButton>
                             </CustomCard>
                         </MotionMain>
                     )}
