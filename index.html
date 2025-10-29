@@ -1,330 +1,387 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIOLABPRO - Εκδήλωση Ενδιαφέροντος</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    
-    <script src="https://unpkg.com/framer-motion@11.2.2/dist/framer-motion.min.js"></script>
-    
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <style>
-        /* Προσαρμογή γραμματοσειράς Inter */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
+import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, onSnapshot, collection, query, where, addDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+
+// --- FIREBASE SETUP ---
+// Global variables provided by the environment
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+// Context for Firebase and User Info
+const FirebaseContext = createContext(null);
+
+const FirebaseProvider = ({ children }) => {
+    const [db, setDb] = useState(null);
+    const [auth, setAuth] = useState(null);
+    const [userId, setUserId] = useState(null);
+    const [isAuthReady, setIsAuthReady] = useState(false);
+
+    useEffect(() => {
+        if (Object.keys(firebaseConfig).length === 0) {
+            console.error("Firebase config is missing. Application cannot proceed.");
+            return;
         }
-    </style>
-</head>
-<body>
-    <div id="root">
-        </div>
 
-    <script type="text/babel">
-        const { useState } = React;
-        
-        // ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε window.motion, καθώς αυτό εκθέτει το CDN
-        const motion = window.motion || {};
+        try {
+            const app = initializeApp(firebaseConfig);
+            const firestore = getFirestore(app);
+            const firebaseAuth = getAuth(app);
 
-        // ----------------------------------------------------------------------
-        // Προσομοίωση των Custom Components (Card & Button) με Tailwind
-        // ----------------------------------------------------------------------
-        const CustomButton = ({ onClick, children, type = 'button', className = '' }) => (
-            <button
-                onClick={onClick}
-                type={type}
-                // Εφαρμογή των βασικών Tailwind classes του Button
-                className={`px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300 shadow-md ${className}`}
-            >
-                {children}
-            </button>
-        );
+            setDb(firestore);
+            setAuth(firebaseAuth);
 
-        const CustomCard = ({ children, className = '' }) => (
-            <div className={`p-6 bg-white rounded-lg shadow-lg ${className}`}>
-                {children}
-            </div>
-        );
-        // ----------------------------------------------------------------------
-
-        function App() {
-            const [page, setPage] = useState('home');
-
-            // Αρχικοποίηση όλων των πεδίων της φόρμας με τα σωστά camelCase names
-            const [formData, setFormData] = useState({
-                fullName: '',
-                email: '',
-                department: '',
-                property: 'Φοιτητής', // Default value
-                interest: 'Εκπαιδευτικό', // Default value
-                hematology: 'Αιμοσφαιρινοπάθειες', // Default value
-                transfusion: 'Ομάδες Αίματος',
-                biofluidCollection: 'Αιμοληψία - Οδηγίες',
-                comments: ''
+            // Authentication Listener
+            const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
+                if (user) {
+                    setUserId(user.uid);
+                    setIsAuthReady(true);
+                } else {
+                    // Sign in using custom token or anonymously if token is unavailable
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(firebaseAuth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(firebaseAuth);
+                        }
+                    } catch (error) {
+                        console.error("Firebase Authentication Error:", error);
+                        setIsAuthReady(true); // Allow UI to render even if sign-in failed
+                    }
+                }
             });
 
-            const handleChange = (e) => {
-                setFormData({ ...formData, [e.target.name]: e.target.value });
-            };
+            return () => unsubscribe();
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            setIsAuthReady(true);
+        }
+    }, []);
 
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                console.log('Form Data Submitted:', formData);
-                // Εδώ θα έπρεπε να στείλετε τα δεδομένα στον server
-                setPage('thankyou');
-            };
+    return (
+        <FirebaseContext.Provider value={{ db, auth, userId, isAuthReady, appId }}>
+            {children}
+        </FirebaseContext.Provider>
+    );
+};
 
-            const scrollToVideo = () => {
-                const videoSection = document.getElementById('video-section');
-                if (videoSection) {
-                    // Κάνει smooth scroll στο div με το id="video-section"
-                    videoSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            };
+const useFirebase = () => useContext(FirebaseContext);
 
-            // Placeholder image URLs (αντικαταστήστε με τα δικά σας)
-            const padaLogo = "./pada_logo.png"; 
-            const unovateLogo = "./main_logo.png";
-            const petieLogo = "./petie_logo.png"; // ΝΕΟ LOGO
-            const backgroundImage ="./background.png";
-            const pdfUrl = "./biolab.pdf"; // Placeholder URL
-            
-            // Το βίντεο παραμένει Rickroll για να λειτουργήσει (αντικαταστήστε το dQw4w9WgXcQ με το δικό σας ID)
-            // const videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"; 
-            const videoUrl = "./biolabpro.mp4"; 
+// --- HELPER COMPONENTS ---
 
+const CustomButton = ({ children, onClick, className = '' }) => (
+    <button
+        onClick={onClick}
+        className={`px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-blue-300 ${className}`}
+    >
+        {children}
+    </button>
+);
 
-            // Επιλέγουμε αν θα χρησιμοποιήσουμε το motion object (αν είναι διαθέσιμο) ή ένα απλό div/main
-            const MotionMain = motion.main || 'main';
-            const MotionImg = motion.img || 'img';
+const SectionTitle = ({ children }) => (
+    <h2 className="text-3xl font-extrabold text-gray-800 mb-6 border-b-2 border-blue-200 pb-2">
+        {children}
+    </h2>
+);
 
-            return (
-                <div className="min-h-screen bg-gray-50 text-gray-800 font-inter">
-                    <header className="flex flex-col md:flex-row items-center justify-between p-6 bg-white shadow-md">
-                        
-                        {/* Container Λογότυπων (Αριστερά, Κέντρο, Δεξιά) */}
-                        <div className="flex items-center w-full md:w-2/3 justify-between">
-                            {/* Logo 1: UNOVATE (Αριστερά) */}
-                            <img src={unovateLogo} alt="UNOVATE" className="h-12" />
-                            
-                            {/* Logo 2: ΠΑΔΑ (Κέντρο) */}
-                            <img src={padaLogo} alt="ΠΑΔΑ" className="h-12" />
+const SectionContainer = ({ children }) => (
+    <div className="bg-white p-8 rounded-xl shadow-2xl transition duration-500 ease-in-out hover:shadow-3xl">
+        {children}
+    </div>
+);
 
-                            {/* Logo 3: PETIE (Δεξιά) */}
-                            <img src={petieLogo} alt="PETIE" className="h-12" />
-                        </div>
+const Loader = () => (
+    <div className="flex items-center justify-center space-x-2 p-8">
+        <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce delay-100"></div>
+        <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce delay-200"></div>
+        <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce delay-300"></div>
+        <p className="text-gray-600 ml-4">Φόρτωση δεδομένων...</p>
+    </div>
+);
 
-                        {/* Γραμμή Πλοήγησης (Παραμένει στα δεξιά του header) */}
-                        <nav className="mt-4 md:mt-0 space-x-4 text-sm font-medium">
-                            <CustomButton onClick={() => setPage('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
-                            <CustomButton onClick={() => setPage('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
-                            <CustomButton onClick={() => setPage('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
-                        </nav>
-                    </header>
+// --- PAGES ---
 
-                    {page === 'home' && (
-                        <MotionMain
-                            className="flex flex-col items-center text-center p-8"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
+const HomePage = () => (
+    <SectionContainer>
+        <SectionTitle>Καλώς ήρθατε στην Έρευνα Καινοτομίας</SectionTitle>
+        <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+            Το πρόγραμμα PETIE στοχεύει στην καταγραφή και ανάλυση των καινοτόμων πρακτικών
+            που εφαρμόζονται στις επιχειρήσεις. Η συμβολή σας είναι καθοριστική για την
+            κατανόηση των σύγχρονων τάσεων και τη διαμόρφωση του μέλλοντος της καινοτομίας.
+        </p>
+        <div className="grid md:grid-cols-3 gap-6 text-center">
+            <div className="p-4 bg-blue-50 rounded-lg shadow-inner">
+                <h3 className="text-xl font-bold text-blue-700 mb-2">Εύκολη Συμμετοχή</h3>
+                <p className="text-gray-600">Συμπληρώστε τη φόρμα σε λίγα λεπτά.</p>
+            </div>
+            <div className="p-4 bg-blue-50 rounded-lg shadow-inner">
+                <h3 className="text-xl font-bold text-blue-700 mb-2">Ανώνυμα Δεδομένα</h3>
+                <p className="text-gray-600">Τα δεδομένα σας παραμένουν εμπιστευτικά.</p>
+            </div>
+            <div className="p-4 bg-blue-50 rounded-lg shadow-inner">
+                <h3 className="text-xl font-bold text-blue-700 mb-2">Σημαντική Συμβολή</h3>
+                <p className="text-gray-600">Βοηθήστε στη διαμόρφωση της εθνικής στρατηγικής.</p>
+            </div>
+        </div>
+        <div className="mt-8 pt-6 border-t border-gray-100">
+             <CustomButton onClick={() => document.querySelector('.main-app-container').scrollIntoView({ behavior: 'smooth' })}>
+                Μάθετε Περισσότερα
+             </CustomButton>
+        </div>
+    </SectionContainer>
+);
 
-                            {/* 1. SECTION: Top Banner and Introduction */}
-                            <MotionImg
-                                src={backgroundImage}
-                                backgroundSize="50%"
-                                alt="BioLabPro Background"
-                                className="w-full max-h-96 object-cover rounded-2xl shadow-lg"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 1.2 }}
-                            />
-                            <h1 className="text-4xl md:text-5xl font-bold mt-8 text-blue-800">BIOLABPRO</h1>
-                            <p className="mt-4 text-lg max-w-2xl">Η πρόταση BioLab Pro διαθέτει σημαντική καινοτομία, σαφές κοινωνικό/εκπαιδευτικό αποτύπωμα και δυνατότητες στρατηγικών συνεργασιών.</p>
+const AboutPage = () => (
+    <SectionContainer>
+        <SectionTitle>Σχετικά με το Πρόγραμμα PETIE</SectionTitle>
+        <div className="space-y-6 text-gray-700">
+            <p className="leading-relaxed">
+                Το PETIE (Παρατηρητήριο Επιχειρηματικής Καινοτομίας και Τεχνολογικής Εξέλιξης) είναι μια πρωτοβουλία
+                που προέκυψε από τη συνεργασία του Πανεπιστημίου Δυτικής Αττικής (ΠΑΔΑ) και του Κέντρου
+                Καινοτομίας UNOVATE. Στόχος μας είναι η συστηματική παρακολούθηση και ανάλυση των τάσεων
+                στην καινοτομία των ελληνικών επιχειρήσεων.
+            </p>
+            <h3 className="text-2xl font-semibold text-gray-800 border-l-4 border-blue-500 pl-3">Οι Στόχοι μας</h3>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Καταγραφή των επιπέδων ψηφιακού μετασχηματισμού.</li>
+                <li>Ανάλυση των επενδύσεων σε Έρευνα & Ανάπτυξη (R&D).</li>
+                <li>Προσδιορισμός των εμποδίων στην υιοθέτηση καινοτόμων πρακτικών.</li>
+                <li>Διαμόρφωση προτάσεων πολιτικής για την ενίσχυση της ανταγωνιστικότητας.</li>
+            </ul>
+        </div>
+    </SectionContainer>
+);
 
-                            <div className="flex flex-col md:flex-row gap-4 mt-8">
-                                <CustomButton onClick={() => window.open(pdfUrl, '_blank')}>Δες την πρόταση (PDF)</CustomButton>
-                                <CustomButton onClick={scrollToVideo}>Δες το βίντεο</CustomButton>
-                                <CustomButton onClick={() => setPage('form')}>Εκδήλωση Ενδιαφέροντος</CustomButton>
-                            </div>
+const FormPage = ({ setPage }) => {
+    const { db, userId, appId, isAuthReady } = useFirebase();
+    const [formData, setFormData] = useState({
+        companyName: '',
+        industry: '',
+        employeeCount: '',
+        innovationType: '',
+        contactEmail: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [message, setMessage] = useState('');
 
-                            {/* 2. SECTION: Video Player */}
-                            <div id="video-section" className="flex flex-col items-center p-8 pt-16 space-y-6 w-full max-w-4xl">
-                                <h2 className="text-3xl font-bold text-blue-800 mb-4">Παρουσίαση Βίντεο</h2>
-                                <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-lg">
-                                    <iframe
-                                        className="w-full h-full"
-                                        src={videoUrl} 
-                                        title="Demo Video"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    ></iframe>
-                                </div>
-                            </div>
-                        </MotionMain>
-                    )}
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
-                    {page === 'about' && (
-                        <MotionMain
-                            className="p-8 max-w-4xl mx-auto"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            <CustomCard>
-                                <h2 className="text-3xl font-bold text-blue-800 mb-4">Σχετικά με το BIOLABPRO</h2>
-                                <p className="text-lg leading-relaxed mb-6">Το BIOLABPRO αποτελεί μια πρωτοποριακή εκπαιδευτική πρόταση του ΠΑΔΑ σε συνεργασία με το UNOVATE, με στόχο τη σύνδεση της θεωρητικής γνώσης με την εφαρμοσμένη βιοϊατρική πρακτική.</p>
-                                <ul className="list-disc pl-6 space-y-2">
-                                    <li><strong>Καινοτομία:</strong> Ενσωμάτωση σύγχρονων τεχνολογιών και προσομοιώσεων.</li>
-                                    <li><strong>Κοινωνικό/Εκπαιδευτικό Αποτύπωμα:</strong> Ενίσχυση δεξιοτήτων και κοινωνικής ευαισθησίας των φοιτητών.</li>
-                                    <li><strong>Συνεργασίες:</strong> Δυνατότητες σύμπραξης με ερευνητικά κέντρα και βιοτεχνολογικές εταιρείες.</li>
-                                </ul>
-                            </CustomCard>
-                        </MotionMain>
-                    )}
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setMessage('');
 
-                    {page === 'form' && (
-                        <MotionMain
-                            className="p-8 max-w-2xl mx-auto"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            <h2 className="text-3xl font-bold text-blue-800 mb-6 text-center">Φόρμα Εκδήλωσης Ενδιαφέροντος</h2>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                {/* ΟΜΑΔΑ 1: Text Inputs (όνομα, email, τμήμα) */}
-                                {[{ label: 'Ονοματεπώνυμο', name: 'fullName' },
-                                 { label: 'Email', name: 'email', type: 'email' },
-                                 { label: 'Τμήμα / Σχολή', name: 'department' }
-                                ].map(({ label, name, type = 'text' }) => (
-                                    <div key={name}>
-                                        <label htmlFor={name} className="block font-medium mb-1">{label}</label>
-                                        <input
-                                            id={name}
-                                            name={name}
-                                            type={type}
-                                            onChange={handleChange}
-                                            value={formData[name] || ''}
-                                            required
-                                            className="w-full border p-2 rounded-md"
-                                        />
-                                    </div>
-                                ))}
-
-                                {/* ΟΜΑΔΑ 2: Select Inputs (Ιδιότητα, Ενδιαφέρον, κλπ) */}
-
-                                <div>
-                                    <label htmlFor="property" className="block font-medium mb-1">Ιδιότητα</label>
-                                    <select
-                                        id="property"
-                                        name="property" // camelCase
-                                        onChange={handleChange}
-                                        value={formData.property} // value set
-                                        className="w-full border p-2 rounded-md"
-                                    >
-                                        {['Φοιτητής', 'Καθηγητής', 'Ερευνητής', 'Εξωτερικός συνεργάτης'].map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="interest" className="block font-medium mb-1">Ενδιαφέρον για συμμετοχή</label>
-                                    <select
-                                        id="interest"
-                                        name="interest" // camelCase
-                                        onChange={handleChange}
-                                        value={formData.interest} // value set
-                                        className="w-full border p-2 rounded-md"
-                                    >
-                                        {['Εκπαιδευτικό', 'Ερευνητικό', 'Συνεργασία'].map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="hematology" className="block font-medium mb-1">Αιματολογία</label>
-                                    <select
-                                        id="hematology"
-                                        name="hematology" // camelCase
-                                        onChange={handleChange}
-                                        value={formData.hematology} // value set
-                                        className="w-full border p-2 rounded-md"
-                                    >
-                                        {['Αιμοσφαιρινοπάθειες', 'Λευχαιμίες', 'Αιμόσταση'].map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="transfusion" className="block font-medium mb-1">Αιμοδοσία / Μετάγγιση</label>
-                                    <select
-                                        id="transfusion"
-                                        name="transfusion" // camelCase
-                                        onChange={handleChange}
-                                        value={formData.transfusion} // value set
-                                        className="w-full border p-2 rounded-md"
-                                    >
-                                        {['Ομάδες Αίματος', 'Έλεγχος Αντισωμάτων', 'Επιλογή Αιμοδότη'].map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="biofluidCollection" className="block font-medium mb-1">Λήψη Βιολογικών Υγρών</label>
-                                    <select
-                                        id="biofluidCollection"
-                                        name="biofluidCollection" // camelCase
-                                        onChange={handleChange}
-                                        value={formData.biofluidCollection} // value set
-                                        className="w-full border p-2 rounded-md"
-                                    >
-                                        {['Αιμοληψία - Οδηγίες', 'Κολπικό', 'Εγκεφαλονωτιαίο'].map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* Textarea */}
-                                <div>
-                                    <label htmlFor="comments" className="block font-medium mb-1">Σχόλια / Παρατηρήσεις</label>
-                                    <textarea
-                                        id="comments"
-                                        name="comments" // camelCase
-                                        onChange={handleChange}
-                                        value={formData.comments} // value set
-                                        className="w-full border p-2 rounded-md"
-                                        rows="3"
-                                    ></textarea>
-                                </div>
-
-                                <CustomButton type="submit" className="w-full bg-blue-700 text-white py-2 rounded-md">Υποβολή Ενδιαφέροντος</CustomButton>
-                            </form>
-                        </MotionMain>
-                    )}
-                </div>
-            );
+        if (!isAuthReady || !userId || !db) {
+            setMessage('Αναμονή για σύνδεση με τη βάση δεδομένων. Δοκιμάστε ξανά σε λίγο.');
+            return;
         }
 
-        // Render της εφαρμογής
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(<App />);
-    </script>
-</body>
-</html>
+        // Simple validation
+        if (!formData.companyName || !formData.contactEmail || !formData.innovationType) {
+            setMessage('Παρακαλώ συμπληρώστε όλα τα απαιτούμενα πεδία.');
+            return;
+        }
 
+        setIsSubmitting(true);
+        try {
+            // Firestore path: /artifacts/{appId}/public/data/expressions_of_interest/{docId}
+            const collectionPath = `artifacts/${appId}/public/data/expressions_of_interest`;
+            const docRef = collection(db, collectionPath);
 
+            await addDoc(docRef, {
+                ...formData,
+                userId: userId,
+                timestamp: serverTimestamp(),
+            });
 
+            setMessage('✅ Η δήλωση ενδιαφέροντος υποβλήθηκε επιτυχώς! Ευχαριστούμε για τη συμμετοχή σας.');
+            setFormData({
+                companyName: '',
+                industry: '',
+                employeeCount: '',
+                innovationType: '',
+                contactEmail: ''
+            });
 
+        } catch (error) {
+            console.error("Error submitting form:", error);
+            setMessage('❌ Αποτυχία υποβολής. Παρακαλώ ελέγξτε τη σύνδεσή σας ή δοκιμάστε αργότερα.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <SectionContainer>
+            <SectionTitle>Φόρμα Εκδήλωσης Ενδιαφέροντος</SectionTitle>
+            <p className="text-gray-600 mb-8">
+                Εκδηλώστε το ενδιαφέρον σας για συμμετοχή στην επόμενη φάση της έρευνας.
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                    <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+                        Επωνυμία Επιχείρησης *
+                    </label>
+                    <input
+                        type="text"
+                        name="companyName"
+                        id="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Όνομα Εταιρείας"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                        Email Επικοινωνίας *
+                    </label>
+                    <input
+                        type="email"
+                        name="contactEmail"
+                        id="contactEmail"
+                        value={formData.contactEmail}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="email@example.com"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-1">
+                        Κλάδος Δραστηριότητας
+                    </label>
+                    <select
+                        name="industry"
+                        id="industry"
+                        value={formData.industry}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">Επιλέξτε Κλάδο</option>
+                        <option value="IT">Πληροφορική / Τεχνολογία</option>
+                        <option value="Manufacturing">Βιομηχανία / Παραγωγή</option>
+                        <option value="Services">Υπηρεσίες</option>
+                        <option value="Trade">Εμπόριο</option>
+                        <option value="Other">Άλλο</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label htmlFor="innovationType" className="block text-sm font-medium text-gray-700 mb-1">
+                        Ποιος τύπος καινοτομίας σας ενδιαφέρει; *
+                    </label>
+                    <textarea
+                        name="innovationType"
+                        id="innovationType"
+                        value={formData.innovationType}
+                        onChange={handleChange}
+                        rows="3"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Π.χ. Καινοτομία προϊόντος, διαδικασίας, μάρκετινγκ ή οργανωτική."
+                        required
+                    ></textarea>
+                </div>
+
+                {message && (
+                    <div className={`p-4 rounded-lg text-sm ${message.startsWith('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {message}
+                    </div>
+                )}
+
+                <CustomButton type="submit" className="w-full" disabled={isSubmitting || !isAuthReady}>
+                    {isSubmitting ? 'Υποβολή...' : 'Υποβολή Δήλωσης'}
+                </CustomButton>
+            </form>
+        </SectionContainer>
+    );
+};
+
+// --- MAIN APP COMPONENT ---
+
+const unovateLogo = "https://placehold.co/120x56/0C4A6E/FFFFFF?text=UNOVATE";
+const padaLogo = "https://placehold.co/120x56/4A67A5/FFFFFF?text=ΠΑΔΑ";
+const petieLogo = "https://placehold.co/120x56/C42026/FFFFFF?text=PETIE";
+
+export default function App() {
+    return (
+        <FirebaseProvider>
+            <AppContent />
+        </FirebaseProvider>
+    );
+}
+
+const AppContent = () => {
+    const [page, setPage] = useState('home');
+    const { isAuthReady, userId } = useFirebase();
+
+    if (!isAuthReady) {
+        return <Loader />;
+    }
+
+    const renderPage = () => {
+        switch (page) {
+            case 'home':
+                return <HomePage />;
+            case 'about':
+                return <AboutPage />;
+            case 'form':
+                return <FormPage setPage={setPage} />;
+            default:
+                return <HomePage />;
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 font-sans main-app-container">
+            {/* Header / Navigation Bar */}
+            <header className="flex flex-col md:flex-row items-center justify-between p-6 bg-white shadow-md">
+                
+                {/* Container Λογότυπων (Αριστερά, Κέντρο, Δεξιά) */}
+                {/* UPDATED: justify-center, gap-12, and increased size to h-14 */}
+                <div className="flex items-center w-full md:w-2/3 justify-center gap-12">
+                    
+                    {/* Logo 1: UNOVATE (Αριστερά) */}
+                    <img src={unovateLogo} alt="UNOVATE" className="h-14" />
+                    
+                    {/* Logo 2: ΠΑΔΑ (Κέντρο) */}
+                    <img src={padaLogo} alt="ΠΑΔΑ" className="h-14" />
+
+                    {/* Logo 3: PETIE (Δεξιά) */}
+                    <img src={petieLogo} alt="PETIE" className="h-14" />
+                </div>
+
+                {/* Γραμμή Πλοήγησης (Παραμένει στα δεξιά του header) */}
+                <nav className="mt-4 md:mt-0 space-x-4 text-sm font-medium">
+                    <CustomButton onClick={() => setPage('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
+                    <CustomButton onClick={() => setPage('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
+                    <CustomButton onClick={() => setPage('form')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Εκδήλωση Ενδιαφέροντος</CustomButton>
+                </nav>
+            </header>
+
+            {/* Main Content */}
+            <main className="container mx-auto p-6 md:p-10">
+                <div className="max-w-4xl mx-auto">
+                    {renderPage()}
+                </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="w-full bg-gray-800 text-white p-6 mt-10">
+                <div className="container mx-auto text-center text-sm">
+                    <p>
+                        Έρευνα PETIE - Πανεπιστήμιο Δυτικής Αττικής & UNOVATE |
+                        <span className="ml-2 text-xs text-gray-400">User ID: {userId || 'N/A'}</span>
+                    </p>
+                </div>
+            </footer>
+        </div>
+    );
+};
