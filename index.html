@@ -4,18 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BIOLABPRO - Εκδήλωση Ενδιαφέροντος</title>
-    <!-- Φόρτωση Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 1. Φόρτωση React Core (Production Minified) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <!-- 2. Φόρτωση React DOM (Production Minified) -->
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     
-    <!-- 3. Φόρτωση Framer Motion (Minified) -->
     <script src="https://unpkg.com/framer-motion@11.2.2/dist/framer-motion.min.js"></script>
     
-    <!-- 4. Φόρτωση Babel (τελευταίο από τις βιβλιοθήκες) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
@@ -30,16 +25,13 @@
 </head>
 <body>
     <div id="root">
-        <!-- Εδώ θα γίνει render η εφαρμογή React -->
-    </div>
+        </div>
 
     <script type="text/babel">
-        // Η μεταβλητή React είναι πλέον διαθέσιμη
         const { useState } = React;
         
-        // Διόρθωση: Αποφεύγουμε το ReferenceError: Framer is not defined 
-        // κάνοντας ρητό έλεγχο για τη global μεταβλητή (window.Framer).
-        const motion = window.Framer ? window.Framer.motion : {};
+        // ΔΙΟΡΘΩΣΗ: Χρησιμοποιούμε window.motion, καθώς αυτό εκθέτει το CDN
+        const motion = window.motion || {};
 
         // ----------------------------------------------------------------------
         // Προσομοίωση των Custom Components (Card & Button) με Tailwind
@@ -100,6 +92,7 @@
             // Placeholder image URLs (αντικαταστήστε με τα δικά σας)
             const padaLogo = "./pada_logo.png"; 
             const unovateLogo = "./unovate_logo.png";
+            const petieLogo = "./petie_logo.png"; // ΝΕΟ LOGO
             const backgroundImage ="./background.png";
             const pdfUrl = "./biolab.pdf"; // Placeholder URL
             
@@ -115,11 +108,20 @@
             return (
                 <div className="min-h-screen bg-gray-50 text-gray-800 font-inter">
                     <header className="flex flex-col md:flex-row items-center justify-between p-6 bg-white shadow-md">
-                            <div className="flex items-center w-full md:w-auto justify-between">
-                            {/* Διορθώθηκε: Αφαιρέθηκαν τα tags  */}
+                        
+                        {/* Container Λογότυπων (Αριστερά, Κέντρο, Δεξιά) */}
+                        <div className="flex items-center w-full md:w-2/3 justify-between">
+                            {/* Logo 1: UNOVATE (Αριστερά) */}
                             <img src={unovateLogo} alt="UNOVATE" className="h-12" />
-                            <img src={padaLogo} alt="ΠΑΔΑ" className="h-12" style="float:right" />
+                            
+                            {/* Logo 2: ΠΑΔΑ (Κέντρο) */}
+                            <img src={padaLogo} alt="ΠΑΔΑ" className="h-12" />
+
+                            {/* Logo 3: PETIE (Δεξιά) */}
+                            <img src={petieLogo} alt="PETIE" className="h-12" />
                         </div>
+
+                        {/* Γραμμή Πλοήγησης (Παραμένει στα δεξιά του header) */}
                         <nav className="mt-4 md:mt-0 space-x-4 text-sm font-medium">
                             <CustomButton onClick={() => setPage('home')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Αρχική</CustomButton>
                             <CustomButton onClick={() => setPage('about')} className="!bg-transparent text-gray-800 hover:text-blue-600 shadow-none p-0">Σχετικά</CustomButton>
@@ -310,39 +312,3 @@
                                 <CustomButton type="submit" className="w-full bg-blue-700 text-white py-2 rounded-md">Υποβολή Ενδιαφέροντος</CustomButton>
                             </form>
                         </MotionMain>
-                    )}
-
-                    {page === 'thankyou' && (
-                        <MotionMain
-                            className="flex flex-col items-center justify-center text-center p-12 space-y-4"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            <h2 className="text-3xl font-bold text-blue-800">Ευχαριστούμε!</h2>
-                            <p>Η ομάδα του BIOLABPRO θα επικοινωνήσει σύντομα μαζί σας.</p>
-                            <CustomButton onClick={() => setPage('home')}>Επιστροφή στην Αρχική</CustomButton>
-                        </MotionMain>
-                    )}
-                </div>
-            );
-        }
-
-        // Render της εφαρμογής
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(<App />);
-    </script>
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
