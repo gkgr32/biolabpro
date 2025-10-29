@@ -93,7 +93,7 @@
                 
                 // --- CONDITIONAL LOGIC: Check last combo box value (biofluidCollection) ---
                 if (formData.biofluidCollection === 'Αιμοληψία - Οδηγίες') {
-                    // Go to 4th Page (Contact)
+                    // Go to 4th Page (Contact/Αιμοληψία)
                     setAndScrollToTop('contact');
                 } else {
                     // Go to Thank You Page (Normal Submission Flow / 3rd page equivalent in this flow)
@@ -117,6 +117,8 @@
             const backgroundImage ="./background.png";
             const pdfUrl = "./biolab.pdf"; // Placeholder URL
             const videoUrl = "./biolabpro.mp4"; 
+            // **Separate URL for the 4th page video**
+            const videoUrlContact = "./biolabpro4.mp4"; 
 
 
             // Επιλέγουμε αν θα χρησιμοποιήσουμε το motion object (αν είναι διαθέσιμο) ή ένα απλό div/main
@@ -210,7 +212,7 @@
                                 <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-lg">
                                     <video
                                         className="w-full h-full"
-                                        src={videoUrl}
+                                        src={videoUrl} // Uses videoUrl (biolabpro.mp4)
                                         controls
                                         poster={backgroundImage} 
                                     >
@@ -246,35 +248,24 @@
                         </MotionMain>
                     )}
 
-                    {/* Page 4: Contact Information (Form Layout + Video) */}
+                    {/* Page 4: ΑΙΜΟΛΗΨΙΑ - ΟΔΗΓΙΕΣ ΛΗΨΗΣ (Video Only) */}
                     {page === 'contact' && (
                         <MotionMain
-                            className="p-8 max-w-2xl mx-auto" // Use max-w-2xl like the form page
+                            // Increased main container to max-w-7xl
+                            className="p-8 max-w-7xl mx-auto text-center"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.5 }}
                         >
-                            <CustomCard className="mb-8">
-                                <h2 className="text-3xl font-bold text-blue-800 mb-6 text-center">Στοιχεία Επικοινωνίας</h2>
-                                <div className="space-y-4 text-left text-lg">
-                                    <p>Για οποιαδήποτε πληροφορία ή απορία σχετικά με το πρόγραμμα BIOLABPRO, μπορείτε να επικοινωνήσετε με την ομάδα μας:</p>
-                                    
-                                    <div className="border-t pt-4 space-y-2">
-                                        <p><strong>Υπεύθυνος Έργου:</strong> Δρ. [Όνομα Υπευθύνου]</p>
-                                        <p><strong>Email:</strong> <a href="mailto:info@biolabpro.gr" className="text-blue-600 hover:underline">info@biolabpro.gr</a></p>
-                                        <p><strong>Τηλέφωνο:</strong> +30 210 XXXX XXX</p>
-                                        <p><strong>Διεύθυνση:</strong> Πανεπιστήμιο Δυτικής Αττικής (ΠΑΔΑ), [Σχολή/Τμήμα]</p>
-                                    </div>
-                                </div>
-                            </CustomCard>
-
-                            {/* Video Section - Copied from Home Page */}
-                             <div className="flex flex-col items-center p-8 pt-4 space-y-6 w-full">
-                                <h2 className="text-2xl font-bold text-blue-800 border-t pt-4 mb-2">Παρουσίαση Βίντεο</h2>
-                                <div className="w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-lg">
+                            <h2 className="text-4xl font-bold text-blue-800 mb-10">ΑΙΜΟΛΗΨΙΑ - ΟΔΗΓΙΕΣ ΛΗΨΗΣ</h2>
+                            
+                            {/* Video Section */}
+                             <div className="flex flex-col items-center space-y-6 w-full">
+                                {/* Increased max-w from 3xl to 5xl for bigger video player */}
+                                <div className="w-full max-w-5xl aspect-video rounded-xl overflow-hidden shadow-lg"> 
                                     <video
                                         className="w-full h-full"
-                                        src={videoUrl}
+                                        src={videoUrlContact} // Uses videoUrlContact (biolabpro4.mp4)
                                         controls
                                         poster={backgroundImage} 
                                     >
@@ -284,7 +275,7 @@
                             </div>
                             {/* End Video Section */}
 
-                            <div className="mt-8 text-center">
+                            <div className="mt-10 text-center">
                                 <CustomButton onClick={() => setAndScrollToTop('home')} className="bg-blue-600 hover:bg-blue-700">Επιστροφή στην Αρχική</CustomButton>
                             </div>
                         </MotionMain>
